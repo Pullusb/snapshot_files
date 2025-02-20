@@ -1,13 +1,13 @@
 bl_info = {
     "name": "Snapshot Files",
-    "author": "Yannick Castaing",
+    "author": 'Yannick "Boubou" Castaing',
     "description": "make a snapshot of your main file",
     "location": "File menu",
     "doc_url": "",
     "warning": "",
     "category": "General",
     "blender": (2,90,0),
-    "version": (1,0,94)
+    "version": (1,0,95)
 }
 
 # get addon name and version to use them automaticaly in the addon
@@ -61,7 +61,7 @@ class SnapshotFilesPreferences(bpy.types.AddonPreferences):
         for addon in bpy.context.preferences.addons.keys():
             if "set_output_path" in addon:
                 row.prop(self, "user_updateoutputpath")
-            if "view_layers_toolbox" in addon:
+            if "view_layers_toolbox" in addon or "viewlayers_toolbox" in addon:
                 row.prop(self, "user_updateoutputnodes")
         row = layout.row()
         row.prop(self, "user_fileversion_prop")
