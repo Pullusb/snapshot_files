@@ -7,7 +7,7 @@ bl_info = {
     "warning": "",
     "category": "General",
     "blender": (2,90,0),
-    "version": (1,0,972)
+    "version": (1,0,973)
 }
 
 # get addon name and version to use them automaticaly in the addon
@@ -45,7 +45,7 @@ class SnapshotFilesPreferences(bpy.types.AddonPreferences):
     user_commentpref : bpy.props.BoolProperty(name="Add a comment", default=True, description = "allow the user to add a comment for the current version")
     user_fileversion_prop : bpy.props.BoolProperty(name="Create version file", default=False, description = "create a fake version file in the same folder as the original file, to know which version we are")
 
-    user_updateoutputpath : bpy.props.BoolProperty(name="Update output path", default=False, description = "if you own the set output path addon, it will automatically update it")
+    user_updateoutputpath : bpy.props.BoolProperty(name="Update output path", default=True, description = "if you own the set output path addon, it will automatically update it")
     user_updateoutputnodes : bpy.props.BoolProperty(name="Update output nodes", default=False, description = "if you own the view layers addon, it will automatically update it")
     update_scene_opt = [
                         ("Opened Scene","Opened Scene","Opened Scene",0),
