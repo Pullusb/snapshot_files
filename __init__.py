@@ -7,7 +7,7 @@ bl_info = {
     "warning": "",
     "category": "General",
     "blender": (2,90,0),
-    "version": (1,3,11)
+    "version": (1,3,21)
 }
 
 # get addon name and version to use them automaticaly in the addon
@@ -74,7 +74,8 @@ class SNAPSHOTFILES_preferences(bpy.types.AddonPreferences):
 
     get_version_opt = [
                         ("Snapshot History","Snapshot History","Snapshot History",0),
-                        ("Snap Folder","Snap Folder","Snap Folder",1),
+                        ("Snap Folder (Default)","Snap Folder (Default)","Snap Folder (Default)",1),
+                        ("Scene Property","Scene Property","Scene Property",2)
                         ]
     get_version_prop: bpy.props.EnumProperty(items = get_version_opt,name = "Version method",description = "how getting version number",default=1)
 
@@ -112,7 +113,7 @@ class SNAPSHOTFILES_preferences(bpy.types.AddonPreferences):
 
 
 class SNAPSHOTFILES_properties(bpy.types.PropertyGroup):
-    file_version : bpy.props.StringProperty(name="",default="001",description="current file version")
+    file_version : bpy.props.StringProperty(name="",default="v001",description="current file version")
 
 # region FUNCTIONS
 def get_snapfolder():
@@ -133,9 +134,9 @@ def get_snapfolder():
 
 # get version from the file
 def get_version():
-    snap_version = '001'
+    snap_version = "001"
     # if folder method
-    if bpy.context.preferences.addons[__name__].preferences.get_version_prop == 'Snap Folder':
+    if bpy.context.preferences.addons[__name__].preferences.get_version_prop == 'Snap Folder (Default)':
         #print("folder method")
         snap_Folder = get_snapfolder()
         blend_filename = str(os.path.basename(bpy.data.filepath)).split(".")[0] # get name without extension
@@ -161,6 +162,8 @@ def get_version():
             snap_version = str(last_version).zfill(3)
         else:
             snap_version = str(1).zfill(3)
+    elif bpy.context.preferences.addons[__name__].preferences.get_version_prop == 'Scene Property':
+        snap_version = bpy.context.scene.sop_props.file_version[1:]
     #print(f'{snap_version=}')
     return snap_version
 
@@ -218,10 +221,8 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
             
 
             ## get version from the file
-            if snap_text in bpy.data.texts.keys():
-                snap_version = get_version()
-            else:
-                snap_version = "001"
+            snap_version = get_version()
+
             snapfile_name = f"{filename_snapped}{snap_version}.{snap_ext}"
             print(f"{snapfile_name=}")
             snap_filepath = snap_Folder.joinpath(snapfile_name)
@@ -262,7 +263,7 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
                 user_comment = "None"
 
             bpy.data.texts[snap_text].cursor_set(3)
-            SnapHistoryText.write(f"Last snapshot made by: {os.getlogin()} \n user comment: {user_comment} \n on: {gethostname()} ({platform}) \n version: Blender {blender_version} \n the: {date_time} \n >>> {snap_filepath}")
+            SnapHistoryText.write(f"Last snapshot made by: {os.getlogin()} \n user comment: {user_comment} \n on: {gethostname()} ({platform}) \n Blender version: Blender {blender_version} \n the: {date_time} \n version based on: {bpy.context.preferences.addons[__name__].preferences.get_version_prop} \n >>> {snap_filepath}")
 
             ## create a fake file version file
             if user_fileversion_prop:
@@ -290,10 +291,10 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
                 # variables
                 #original_filename = filename_clue
                 original_filename = blend_filename
-                version = str(int(snap_version) + 1).zfill(3)
+                new_version = str(int(snap_version) + 1).zfill(3)
                 target_directory = blend_folder
 
-                file_path = create_versioned_file(original_filename, version, target_directory)
+                file_path = create_versioned_file(original_filename, new_version, target_directory)
 
                 ## clean previous versions
                 # List to store matching files
@@ -302,7 +303,7 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
                 for filename in os.listdir(target_directory):
                     # Check if the file contains the original_filename and its extension starts with clue
                     if original_filename in filename and filename.split(clue[0])[-1].startswith(clue[1]):
-                        if str(filename).split(clue[0])[-1] == f"{clue[1]}{version}":
+                        if str(filename).split(clue[0])[-1] == f"{clue[1]}{new_version}":
                             pass 
                         else:
                             full_path = os.path.join(target_directory, filename)
@@ -312,7 +313,7 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
 
             ## fill scene property
             for scene in bpy.data.scenes:
-                setattr(scene.sop_props, "file_version", snap_version)
+                setattr(scene.sop_props, "file_version", f"v{new_version}")
 
             del snap_version
 
