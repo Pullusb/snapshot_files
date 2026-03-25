@@ -7,7 +7,7 @@ bl_info = {
     "warning": "",
     "category": "General",
     "blender": (2,90,0),
-    "version": (1,3,21)
+    "version": (1,3,3)
 }
 
 # get addon name and version to use them automaticaly in the addon
@@ -65,7 +65,7 @@ class SNAPSHOTFILES_preferences(bpy.types.AddonPreferences):
     user_compression_pref : bpy.props.BoolProperty(name="Compressed files", default=True,description = "if checked, snapd files and current file will be compressed")
 
     user_updateoutputpath : bpy.props.BoolProperty(name="Update output path", default=True, description = "if you own the set output path addon, it will automatically update it")
-    user_updateoutputnodes : bpy.props.BoolProperty(name="Update output nodes", default=False, description = "if you own the view layers addon, it will automatically update it")
+    user_updateoutputnodes : bpy.props.BoolProperty(name="Update output nodes", default=True, description = "if you own the view layers addon, it will automatically update it")
     update_scene_opt = [
                         ("Opened Scene","Opened Scene","Opened Scene",0),
                         ("All Scenes","All Scenes","All Scenes",1),
@@ -106,7 +106,7 @@ class SNAPSHOTFILES_preferences(bpy.types.AddonPreferences):
             for addon in bpy.context.preferences.addons.keys():
                 if "set_output_path" in addon:
                     row.prop(self, "user_updateoutputpath")
-                if "view_layers_toolbox" in addon or "viewlayers_toolbox" in addon:
+                if "view_layers_toolbox" in addon or "viewlayers_toolbox" in addon or "view_layers_outputs" in addon:
                     row.prop(self, "user_updateoutputnodes")
             row = box.row()
             row.prop(self, "update_scene_prop")
@@ -192,16 +192,16 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
         update_scene_prop = bpy.context.preferences.addons[__name__].preferences.update_scene_prop
         user_compression_pref = bpy.context.preferences.addons[__name__].preferences.user_compression_pref
         
-        ## check if another addons are in user addons
-        for addon in bpy.context.preferences.addons.keys():
-            if "set_output_path" in addon:
-                user_updateoutputpath = bpy.context.preferences.addons[__name__].preferences.user_updateoutputpath
-            else:
-                user_updateoutputpath = False
-            if "view_layers_toolbox" in addon or "viewlayers_toolbox" in addon:
-                user_updateoutputnodes = bpy.context.preferences.addons[__name__].preferences.user_updateoutputnodes
-            else:
-                user_updateoutputnodes = False
+        # ## check if another addons are in user addons
+        # for addon in bpy.context.preferences.addons.keys():
+        #     if "set_output_path" in addon:
+        #         user_updateoutputpath = bpy.context.preferences.addons[__name__].preferences.user_updateoutputpath
+        #     else:
+        #         user_updateoutputpath = False
+        #     if "view_layers_toolbox" in addon or "viewlayers_toolbox" in addon:
+        #         user_updateoutputnodes = bpy.context.preferences.addons[__name__].preferences.user_updateoutputnodes
+        #     else:
+        #         user_updateoutputnodes = False
 
         if bpy.data.filepath != '':
             snap_Folder = Path(get_snapfolder())
@@ -323,11 +323,14 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
                                         compress=user_compression_pref    
                                         )
 
+            ### update output path and node path regarding preferences
+            # print("update outputs ")
             current_scene = bpy.context.window.scene # store current scene
             current_layer = bpy.context.window.view_layer # store current view layer
 
             ## update output path
-            if user_updateoutputpath:
+            if bpy.context.preferences.addons[__name__].preferences.user_updateoutputpath:
+                # print("update output path")
                 if update_scene_prop=="All Scenes": 
                     for scene in bpy.data.scenes: 
                         bpy.context.window.scene = scene
@@ -337,15 +340,17 @@ class FILE_OT_snapshotfiles(bpy.types.Operator):
                     bpy.ops.render.setoutputpath()
 
             ## update output view layers
-            if user_updateoutputnodes:
-                if update_scene_prop=="All Scenes": 
+            if bpy.context.preferences.addons[__name__].preferences.user_updateoutputnodes:
+                # print("update node output")
+                if update_scene_prop=="All Scenes":
                     for scene in bpy.data.scenes: 
-                        bpy.context.window.scene = scene
-                        bpy.ops.vltoolbox.createnodesoutput()
-                        bpy.context.window.scene = current_scene
-                        bpy.context.window.view_layer = current_layer
+                        if not bpy.context.scene.render.image_settings.file_format == 'FFMPEG': ## avoid crash because of movie format
+                            bpy.context.window.scene = scene
+                            bpy.ops.vloutputs.createnodesoutput()
+                            bpy.context.window.scene = current_scene
+                            bpy.context.window.view_layer = current_layer
                 else:
-                    bpy.ops.vltoolbox.createnodesoutput()
+                    bpy.ops.vloutputs.createnodesoutput()
 
             # reset the comment
             self.text_input = ''#f'v{get_version()} to v{str(int(get_version())+1).zfill(3)}'
