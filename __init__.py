@@ -7,7 +7,7 @@ bl_info = {
     "warning": "",
     "category": "General",
     "blender": (2,90,0),
-    "version": (1,3,32)
+    "version": (1,3,33)
 }
 
 # get addon name and version to use them automaticaly in the addon
@@ -397,7 +397,6 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
     bpy.types.TOPBAR_MT_file.remove(snapshotFiles_menu_draw)
-    del bpy.types.Scene.mrs_props
     # remove keymap
     for keymap, keymapitem in addon_keymaps:
         keymap.keymap_items.remove(keymapitem)
@@ -405,6 +404,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-
-    # test call
-    bpy.ops.object.simple_operator('INVOKE_DEFAULT')
