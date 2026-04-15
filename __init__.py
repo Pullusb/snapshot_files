@@ -12,8 +12,7 @@ bl_info = {
 
 # get addon name and version to use them automaticaly in the addon
 Addon_Name = str(bl_info["name"])
-Addon_Version = str(bl_info["version"])
-Addon_Version = Addon_Version[1:8].replace(",",".")
+Addon_Version = '. '.join([str(n) for n in bl_info["version"]])
 
 '''
 update rebrancher ancienne version
@@ -36,7 +35,6 @@ from datetime import datetime
 from sys import platform
 
 # define global variables
-debug_mode = False
 separator = "-" * 20
 
 snap_folder = "Snap_Files"
