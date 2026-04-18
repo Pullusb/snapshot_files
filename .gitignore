@@ -2,3 +2,4 @@ __pycache__
 *.py[cod]
 .vscode
 *.ffs_db
+__pycache__/__init__.cpython-311.pyc
